@@ -66,9 +66,10 @@ jobs:
 | Mark-read via `messages/{id}/modify` | ✅ |
 | Belt-and-suspenders seen-id cursor | ✅ |
 | Tests | ✅ 12/12 (config + render + classify + body extract + header) |
-| crates.io publish | ⬜ pending Phase 96 release wave |
-| CI workflow | ⬜ pending |
-| `historyId` migration (non-breaking) | ⬜ deferred |
+| CI workflow | ✅ (`.github/workflows/ci.yml`) |
+| Release workflow | ✅ (`.github/workflows/release.yml`, tag-driven) |
+| crates.io publish | ⬜ pending Phase 96 release wave (operator action) |
+| `historyId` migration (non-breaking) | ⬜ deferred to Phase 97 |
 
 ## License
 
