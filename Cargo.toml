@@ -1,0 +1,47 @@
+# Phase 96 — standalone subprocess plugin for Gmail IMAP / API
+# polling. Extracted from `crates/poller/src/builtins/gmail/` during
+# the Phase 96 Laravel-style poller refactor (scope expansion: gmail
+# was provider-specific and kept `nexo-plugin-google` in the daemon
+# dep tree).
+
+[package]
+name         = "nexo-poller-gmail"
+version      = "0.1.0"
+description  = "Gmail (Google API) poller plugin for Nexo agents (out-of-tree subprocess)."
+edition      = "2021"
+license      = "MIT OR Apache-2.0"
+repository   = "https://github.com/lordmacu/nexo-rs-poller-gmail"
+authors      = ["Cristian García <informacion@cristiangarcia.co>"]
+readme       = "README.md"
+keywords     = ["nexo", "plugin", "gmail", "google", "poller"]
+categories   = ["api-bindings"]
+rust-version = "1.80"
+
+[lib]
+name = "nexo_poller_gmail"
+path = "src/lib.rs"
+
+[[bin]]
+name = "nexo-poller-gmail"
+path = "src/main.rs"
+
+[dependencies]
+nexo-microapp-sdk = { path = "../proyecto/crates/microapp-sdk", features = ["plugin", "poller"] }
+nexo-poller       = { path = "../proyecto/crates/poller" }
+nexo-broker       = { path = "../proyecto/crates/broker" }
+nexo-config       = { path = "../proyecto/crates/config" }
+nexo-plugin-google = "0.3.0"
+
+tokio        = { version = "1", features = ["macros", "rt-multi-thread", "sync", "time", "io-util", "io-std"] }
+async-trait  = "0.1"
+serde        = { version = "1", features = ["derive"] }
+serde_json   = "1"
+serde_yaml   = "0.9"
+anyhow       = "1"
+chrono       = { version = "0.4", features = ["serde"] }
+tracing      = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[dev-dependencies]
+tempfile     = "3"
+tokio        = { version = "1", features = ["macros", "rt-multi-thread", "test-util"] }

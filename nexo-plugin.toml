@@ -1,0 +1,37 @@
+manifest_version = 2
+
+[plugin]
+id               = "gmail"
+version          = "0.1.0"
+name             = "Gmail Poller"
+description      = "Gmail (Google API) poller — fetches unread messages, dispatches via deliver channel."
+min_nexo_version = ">=0.2.0"
+
+[plugin.entrypoint]
+command = "nexo-poller-gmail"
+
+[plugin.requires]
+nexo_capabilities = ["broker"]
+
+[plugin.capabilities.broker]
+subscribe = [
+    "plugin.poller.gmail.tick",
+    "_inbox.>",
+]
+publish = [
+    "daemon.rpc.gmail",
+    "plugin.outbound.whatsapp.>",
+    "plugin.outbound.telegram.>",
+    "plugin.outbound.email.>",
+    "_inbox.>",
+]
+
+[plugin.poller]
+kinds                = ["gmail"]
+broker_topic_prefix  = "plugin.poller.gmail"
+lifecycle            = "long_lived"
+# `max_concurrent_ticks = 1` serialises per kind so gmail + calendar
+# (sister plugin) don't race the same OAuth token file when both run
+# for the same agent.
+max_concurrent_ticks = 1
+tick_timeout_secs    = 120
