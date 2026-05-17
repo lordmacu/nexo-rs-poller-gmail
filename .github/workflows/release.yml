@@ -1,0 +1,59 @@
+name: release
+
+# Phase 96 — tag-push driven cargo publish to crates.io.
+# Required repo secret: `CARGO_REGISTRY_TOKEN`.
+# Trigger: push tag `nexo-poller-gmail-v*`.
+
+on:
+  push:
+    tags:
+      - "nexo-poller-gmail-v*"
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_NET_RETRY: "10"
+  CARGO_NET_TIMEOUT: "60"
+
+jobs:
+  publish:
+    name: cargo publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout plugin
+        uses: actions/checkout@v4
+        with:
+          path: nexo-rs-poller-gmail
+
+      - name: Checkout proyecto (path-dep workspace)
+        uses: actions/checkout@v4
+        with:
+          repository: lordmacu/nexo-rs
+          path: proyecto
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: nexo-rs-poller-gmail
+          key: release-${{ hashFiles('nexo-rs-poller-gmail/Cargo.lock') }}
+
+      - name: Reject lingering path deps in Cargo.toml
+        working-directory: nexo-rs-poller-gmail
+        run: |
+          if grep -E '^\s*nexo-.*path\s*=' Cargo.toml; then
+            echo "ERROR: path deps detected — flip to crates.io before tagging" >&2
+            exit 1
+          fi
+
+      - name: cargo publish --dry-run
+        working-directory: nexo-rs-poller-gmail
+        run: cargo publish --dry-run
+
+      - name: cargo publish
+        working-directory: nexo-rs-poller-gmail
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish
