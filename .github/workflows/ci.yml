@@ -1,0 +1,64 @@
+name: ci
+
+# Phase 96 — pull-request + push validation. Gmail (Google API)
+# poller plugin. OAuth + Gmail API live-call tests are skipped in
+# CI (would require Google API credentials + an inbox fixture); the
+# unit tests cover config parse + regex extract + template render +
+# multipart body extraction + URL encoding + error classification.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_NET_RETRY: "10"
+  CARGO_NET_TIMEOUT: "60"
+
+jobs:
+  test:
+    name: cargo nextest (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-14
+          - windows-latest
+    steps:
+      - name: Checkout plugin
+        uses: actions/checkout@v4
+        with:
+          path: nexo-rs-poller-gmail
+
+      - name: Checkout proyecto (path-dep workspace)
+        uses: actions/checkout@v4
+        with:
+          repository: lordmacu/nexo-rs
+          path: proyecto
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: nexo-rs-poller-gmail
+          key: ci-${{ matrix.os }}-${{ hashFiles('nexo-rs-poller-gmail/Cargo.lock') }}
+
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
+
+      - name: cargo build (lib + bin + tests)
+        working-directory: nexo-rs-poller-gmail
+        run: cargo build --lib --bin nexo-poller-gmail --tests
+
+      - name: cargo nextest run (lib)
+        working-directory: nexo-rs-poller-gmail
+        run: cargo nextest run --lib --no-fail-fast
